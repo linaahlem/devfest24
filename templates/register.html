@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+</head>
+<body>
+    <h2>Register as a Company</h2>
+    <form method="POST" action="{{ url_for('register') }}">
+        <label for="company_name">Company Name</label><br>
+        <input type="text" id="company_name" name="company_name" required><br><br>
+        <label for="industry">Industry</label><br>
+        <select id="industry" name="industry" required>
+            <option value="" disabled selected>Select Industry</option>
+            {% for industry in industries %}
+                <option value="{{ industry[0] }}">{{ industry[1] }}</option>
+            {% endfor %}
+        </select><br><br>
+        
+        <label for="country">Country</label><br>
+        <select id="country" name="country" required>
+            <option value="" disabled selected>Select Country</option>
+            {% for country in countries %}
+                <option value="{{ country[0] }}">{{ country[1] }}</option>
+            {% endfor %}
+        </select><br><br>
+        
+        <label for="company_address">Company Address</label><br>
+        <input type="text" id="company_address" name="company_address" required><br><br>
+        
+        <label for="company_size">Company Size</label><br>
+        {% for size in sizes %}
+            <input type="radio" id="{{ size[1] }}" name="company_size" value="{{ size[0] }}" required>
+            <label for="{{ size[1] }}">{{ size[1] }}</label><br>
+        {% endfor %}
+        <br>
+        
+        <input type="submit" value="Register">
+    </form>
+    <p>Already have an account? <a href="./login.html">Login here</a>.</p>
+</body>
+</html>

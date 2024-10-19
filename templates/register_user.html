@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+</head>
+<body>
+    <h2>Register as a user</h2>
+    <form method="POST" action="{{ url_for('register_user') }}">
+        <label for="full_name">Full Name</label><br>
+        <input type="text" id="full_name" name="full_name" required><br><br>
+
+        <label for="email">Email</label><br>
+        <input type="email" id="email" name="email" required
+               pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" 
+               title="Please enter a valid email address"><br><br>
+
+        <label for="password">Password</label><br>
+        <input type="password" id="password" name="password" required
+               pattern=".{8,}" title="Password must be at least 8 characters long"><br><br>
+
+        <label for="confirm_password">Confirm Password</label><br>
+        <input type="password" id="confirm_password" name="confirm_password" required><br><br>
+
+        
+        
+        <input type="submit" value="Register">
+    </form>
+    <p>Already have an account? <a href="./login.html">Login here</a>.</p>
+</body>
+</html>
+<script>
+    function validatePasswords() {
+        const password = document.getElementById("password").value;
+        const confirmPassword = document.getElementById("confirm_password").value;
+        
+        if (password !== confirmPassword) {
+            alert("Passwords do not match.");
+            return false;
+        }
+        return true;
+    }
+</script>
