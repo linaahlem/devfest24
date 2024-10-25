@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chatbot Interface</title>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Chatbot</h2>
+        </div>
+        <div class="chat-window" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+        <div class="chat-input">
+            <form method="POST" action="/chatbot">
+                <input type="text" name="user_input" placeholder="Type a message..." style="width: 80%;">
+                <button type="submit" style="width: 18%;">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <h1>Upload Your Questions File</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" id="fileInput" accept=".txt" required>
+        <button type="button" onclick="uploadFile()">Upload</button>
+    </form>
+    
+    <div id="result" style="margin-top: 20px;"></div>
+
+    <script>
+        async function uploadFile() {
+            const formData = new FormData();
+            const fileInput = document.getElementById('fileInput');
+
+            if (fileInput.files.length === 0) {
+                alert("Please select a file.");
+                return;
+            }
+
+            formData.append("file", fileInput.files[0]);
+
+            const response = await fetch("/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = "";  // Clear previous results
+
+            if (response.ok) {
+                const data = await response.json();
+                const downloadLink = document.createElement("a");
+                downloadLink.href = data.download_link;
+                downloadLink.innerText = "Download the generated CSV";
+                resultDiv.appendChild(downloadLink);
+            } else {
+                const errorData = await response.json();
+                resultDiv.innerText = "Error: " + errorData.error;
+            }
+        }
+    </script>
+</body>
+</html>
