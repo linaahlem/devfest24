@@ -51,6 +51,7 @@ def get_sql_chain(db):
         ```<SCHEMA> {schema} </SCHEMA>```
         each question is about one and only one table so make sure to keep the tables' name as they are
         note that when the user asks about the months or the days use the tables containing full dates not years only
+        note that each time the user ask for the current of something it means the data existing in the table and not necessarily the exact same day of today
         Conversation History: {conversation_history}
 
         Write only the SQL query without any additional text.
@@ -82,8 +83,11 @@ def get_sql_chain(db):
 def clean_sql_query(query: str) -> str:
     """Extracts only the SQL code from a string containing extra text."""
     sql_code = re.search(r"(SELECT .*?;)", query, re.DOTALL)
-    print("sql_code : ",sql_code.group(1))
+    print("sql_code : ",sql_code)
+    print("query : ",query)
     return sql_code.group(1).strip() if sql_code else query
+
+from sqlalchemy.exc import ProgrammingError
 
 def get_response(user_query: str, db: SQLDatabase, conversation_history: list):
     sql_chain = get_sql_chain(db)
@@ -107,22 +111,38 @@ def get_response(user_query: str, db: SQLDatabase, conversation_history: list):
     prompt = ChatPromptTemplate.from_template(template=prompt_template)
     llm = ChatGroq(model="Mixtral-8x7b-32768", temperature=0.2)
 
-    chain = (
-            RunnablePassthrough.assign(sql_query=sql_chain).assign(
-                schema=lambda _: db.get_table_info(),
-                response=lambda vars: db.run(clean_sql_query(vars["sql_query"]))  # Apply clean_sql_query here
-            )
-            | prompt
-            | llm
-            | StrOutputParser()
-    )
+    attempt = 0
+    max_attempts = 5  # Define a maximum number of retry attempts
 
-    output = chain.invoke({
-        "question": user_query,
-        "conversation_history": conversation_history
-    })
-    print("output : ", output)
-    return output
+    while attempt < max_attempts:
+        try:
+            chain = (
+                RunnablePassthrough.assign(sql_query=sql_chain).assign(
+                    schema=lambda _: db.get_table_info(),
+                    response=lambda vars: db.run(clean_sql_query(vars["sql_query"]))  # Apply clean_sql_query here
+                )
+                | prompt
+                | llm
+                | StrOutputParser()
+            )
+
+            output = chain.invoke({
+                "question": user_query,
+                "conversation_history": conversation_history
+            })
+
+            print("output:", output)
+            return output  # Exit loop and return output if successful
+
+        except ProgrammingError as e:
+            print(f"ProgrammingError encountered: {e}")
+            attempt += 1
+            sql_chain = get_sql_chain(db)
+            print(f"Retrying attempt {attempt}/{max_attempts}...")
+
+    # If max retries reached, provide a fallback response
+    print("Maximum retries reached. Unable to retrieve the requested information.")
+    return "I'm unable to retrieve that information from the available data."
 
 class AIMessage:
     def __init__(self, content):
@@ -132,7 +152,6 @@ class HumanMessage:
     def __init__(self, content):
         self.content = content
 
-# Initialize conversation history
 if "conversation_history" not in app.config:
     app.config['conversation_history'] = [
         AIMessage(content="Hello! I am a SQL assistant. Ask me questions about your MYSQL database.")
