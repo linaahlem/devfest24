@@ -4,15 +4,16 @@ from flask_mysqldb import MySQL
 import os
 import re
 from werkzeug.utils import secure_filename
+from langchain.sql_database import SQLDatabase
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
-from langchain_community.utilities.sql_database import SQLDatabase
 from langchain_groq import ChatGroq
 
 from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
 
